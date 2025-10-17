@@ -254,16 +254,44 @@ export function StudentManagement({ user, onLogout, onNavigateBack }: StudentMan
       await new Promise((resolve, reject) => {
         logoImg.onload = () => {
           try {
-            // Create canvas to convert logo to data URL
+            // Create canvas to convert logo to data URL with circular frame
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             const logoSize = 16; // Logo size in mm
-            canvas.width = logoSize * 4; // Higher resolution
-            canvas.height = logoSize * 4;
+            const resolution = 8; // Higher resolution multiplier for better quality
+            canvas.width = logoSize * resolution;
+            canvas.height = logoSize * resolution;
             
             if (ctx) {
+              // Enable image smoothing for better quality
+              ctx.imageSmoothingEnabled = true;
+              ctx.imageSmoothingQuality = 'high';
+              
+              // Draw circular clip path
+              const centerX = canvas.width / 2;
+              const centerY = canvas.height / 2;
+              const radius = canvas.width / 2;
+              
+              ctx.beginPath();
+              ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+              ctx.closePath();
+              ctx.clip();
+              
+              // Draw the logo image
               ctx.drawImage(logoImg, 0, 0, canvas.width, canvas.height);
-              const dataUrl = canvas.toDataURL('image/png', 0.9);
+              
+              // Reset clip to draw border
+              ctx.restore();
+              ctx.save();
+              
+              // Draw circular border
+              ctx.beginPath();
+              ctx.arc(centerX, centerY, radius - 4, 0, Math.PI * 2);
+              ctx.strokeStyle = '#ffffff';
+              ctx.lineWidth = 8;
+              ctx.stroke();
+              
+              const dataUrl = canvas.toDataURL('image/png', 1.0);
               doc.addImage(dataUrl, 'PNG', x + 3, y + 2, logoSize, logoSize);
             }
             resolve(null);
